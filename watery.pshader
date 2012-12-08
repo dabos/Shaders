@@ -1,0 +1,55 @@
+precision mediump float;
+
+uniform float time;
+varying vec2 position;
+
+float random(float seed) {
+return fract(sin(seed) * 23523.23);
+}
+
+float random(vec2 seed){
+ return random(seed.x + seed.y*300.);
+}
+
+float noise (vec2 p){
+ float lowerleft = random(floor(p));
+  float lowerright = random(vec2(ceil(p.x), floor(p.y)));
+  float upperleft = random(vec2(floor(p.x),ceil(p.y)));
+  float upperright = random(ceil(p));
+  
+  vec2 f = fract(p);
+  
+  float lower =mix(lowerleft,lowerright,smoothstep(0.,1.,f.x));
+  float upper = mix(upperleft, upperright, smoothstep(0.,1., f.x));
+  
+  float b = mix(lower,upper,smoothstep(0.,1.,f.y));
+  return b ;
+}
+
+float fbm(vec2 p){
+  float b = noise(p * 1.);
+  b += noise(p * 2.) /2.;
+  b += noise(p * 4.) /4.;
+  b += noise(p * 8.) /8.;
+  
+  b /= 1. + 1./2. + 1./4. + 1./8.;
+  return b;
+}
+
+void main() 
+{
+  vec2 p = position;
+  float t = time /50.;
+  
+  float x = fbm(p + time);
+  float y = fbm(p+ 100. - time );
+  
+  float ax = fbm(p+ vec2(x,y)*4. + time);
+  float ay =fbm(p + vec2(x,y)*4. + 500. -time);
+  
+  float b = fbm(p + vec2(ax,ay)*4. + time);
+  
+  vec3 color = vec3(b);
+  
+  gl_FragColor = vec4(color, 1.);
+}
